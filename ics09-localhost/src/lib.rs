@@ -4,7 +4,9 @@ extern crate alloc;
 use ibc::core::ics02_client::client_type::ClientType;
 
 pub mod client_state;
+pub mod consensus_state;
 pub mod error;
+pub mod header;
 pub mod prelude;
 
 pub(crate) const LOCALHOST_CLIENT_TYPE: &str = "09-localhost";

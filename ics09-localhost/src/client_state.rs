@@ -73,7 +73,7 @@ impl Ics2ClientState for ClientState {
         _client_message: Any,
         _update_kind: &UpdateKind,
     ) -> Result<(), ClientError> {
-        todo!()
+        Ok(())
     }
 
     /// Checks for evidence of a misbehaviour in Header or Misbehaviour type. It
@@ -85,7 +85,7 @@ impl Ics2ClientState for ClientState {
         _client_message: Any,
         _update_kind: &UpdateKind,
     ) -> Result<bool, ClientError> {
-        todo!()
+        Ok(true)
     }
 
     /// Updates and stores as necessary any associated information for an IBC
@@ -103,7 +103,7 @@ impl Ics2ClientState for ClientState {
         _client_id: &ClientId,
         _header: Any,
     ) -> Result<Vec<Height>, ClientError> {
-        todo!()
+        Ok(vec![])
     }
 
     /// update_state_on_misbehaviour should perform appropriate state changes on
@@ -115,7 +115,7 @@ impl Ics2ClientState for ClientState {
         _client_message: Any,
         _update_kind: &UpdateKind,
     ) -> Result<(), ClientError> {
-        todo!()
+        Ok(())
     }
 
     /// Verify the upgraded client and consensus states and validate proofs
@@ -136,7 +136,7 @@ impl Ics2ClientState for ClientState {
         _proof_upgrade_consensus_state: MerkleProof,
         _root: &CommitmentRoot,
     ) -> Result<(), ClientError> {
-        todo!()
+        Ok(())
     }
 
     // Update the client state and consensus state in the store with the upgraded ones.
@@ -145,7 +145,9 @@ impl Ics2ClientState for ClientState {
         _upgraded_client_state: Any,
         _upgraded_consensus_state: Any,
     ) -> Result<UpdatedState, ClientError> {
-        todo!()
+        Err(ClientError::Other {
+            description: "unimplement".to_string(),
+        })
     }
 
     // Verify_membership is a generic proof verification method which verifies a
@@ -158,7 +160,7 @@ impl Ics2ClientState for ClientState {
         _path: Path,
         _value: Vec<u8>,
     ) -> Result<(), ClientError> {
-        todo!()
+        Ok(())
     }
 
     // Verify_non_membership is a generic proof verification method which
@@ -170,7 +172,7 @@ impl Ics2ClientState for ClientState {
         _root: &CommitmentRoot,
         _path: Path,
     ) -> Result<(), ClientError> {
-        todo!()
+        Ok(())
     }
 }
 
