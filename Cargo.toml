@@ -1,6 +1,7 @@
 [workspace]
 members = [
     "ics06-solomachine",
+    "ics09-localhost",
 ]
 resolver = "2"
 

@@ -1,0 +1,37 @@
+[package]
+name = "ics09-localhost"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+ibc = { version = "0.41.0", features = ["serde", "parity-scale-codec", "borsh"], default-features = false }
+ibc-proto = { version = "0.30.0", features = ["parity-scale-codec", "borsh"], default-features = false }
+prost = { version = "0.11", default-features = false }
+displaydoc = { version = "0.2", default-features = false }
+bytes = { version = "1.2.1", default-features = false }
+serde_derive = { version = "1.0.104", default-features = false }
+serde = { version = "1.0", default-features = false }
+serde_json = { version = "1", default-features = false }
+k256 = { version = "0.13", features = ["ecdsa", "sha256"], default-features = false }
+tendermint = { version = "0.31", features = ["secp256k1", "rust-crypto"], default-features = false }
+subtle-encoding = { version = "0.5", default-features = false }
+
+[dev-dependencies]
+hex-literal = "0.4"
+
+[features]
+default = ["std"]
+std = [
+    "ibc/std",
+    "ibc-proto/std",
+    "prost/std",
+    "displaydoc/std",
+    "bytes/std",
+    "serde/std",
+    "serde_json/std",
+    "k256/std",
+    "tendermint/std",
+    "subtle-encoding/std",
+]
