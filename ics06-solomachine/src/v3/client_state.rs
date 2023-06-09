@@ -1,9 +1,9 @@
 use crate::cosmos::crypto::PublicKey;
 use crate::prelude::*;
-use crate::v3::consensus_state::ConsensusState as SmConsensusState;
+use crate::v3::consensus_state::ConsensusState;
 use crate::v3::error::Error;
-use crate::v3::header::Header as SmHeader;
-use crate::v3::misbehaviour::Misbehaviour as SmMisbehaviour;
+use crate::v3::header::Header;
+use crate::v3::misbehaviour::Misbehaviour;
 use crate::v3::proof::types::sign_bytes::SignBytes;
 use crate::v3::proof::types::signature_and_data::SignatureAndData;
 use crate::v3::proof::types::timestamped_signature_data::TimestampedSignatureData;
@@ -11,7 +11,7 @@ use crate::v3::proof::verify_signature;
 use ibc::core::ics02_client::client_state::UpdateKind;
 use ibc::core::ics02_client::client_state::{ClientState as Ics2ClientState, UpdatedState};
 use ibc::core::ics02_client::client_type::ClientType;
-use ibc::core::ics02_client::consensus_state::ConsensusState;
+use ibc::core::ics02_client::consensus_state::ConsensusState as Ics02ConsensusState;
 use ibc::core::ics02_client::error::ClientError;
 use ibc::core::ics23_commitment::commitment::{
     CommitmentPrefix, CommitmentProofBytes, CommitmentRoot,
@@ -25,7 +25,7 @@ use ibc::core::timestamp::Timestamp;
 use ibc::core::{ExecutionContext, ValidationContext};
 use ibc::Height;
 use ibc_proto::google::protobuf::Any;
-use ibc_proto::ibc::lightclients::solomachine::v3::ClientState as RawSmClientState;
+use ibc_proto::ibc::lightclients::solomachine::v3::ClientState as RawClientState;
 use ibc_proto::protobuf::Protobuf;
 use prost::Message;
 
@@ -44,7 +44,7 @@ pub struct ClientState {
     pub sequence: Height,
     /// frozen sequence of the solo machine
     pub is_frozen: bool,
-    pub consensus_state: SmConsensusState,
+    pub consensus_state: ConsensusState,
 }
 
 impl ClientState {
@@ -53,7 +53,7 @@ impl ClientState {
         chain_id: ChainId,
         sequence: Height,
         is_frozen: bool,
-        consensus_state: SmConsensusState,
+        consensus_state: ConsensusState,
     ) -> Self {
         Self {
             chain_id,
@@ -163,8 +163,11 @@ impl Ics2ClientState for ClientState {
         false
     }
 
-    fn initialise(&self, consensus_state: Any) -> Result<Box<dyn ConsensusState>, ClientError> {
-        SmConsensusState::try_from(consensus_state).map(SmConsensusState::into_box)
+    fn initialise(
+        &self,
+        consensus_state: Any,
+    ) -> Result<Box<dyn Ics02ConsensusState>, ClientError> {
+        ConsensusState::try_from(consensus_state).map(ConsensusState::into_box)
     }
 
     /// verify_client_message must verify a client_message. A client_message
@@ -188,11 +191,11 @@ impl Ics2ClientState for ClientState {
     ) -> Result<(), ClientError> {
         match update_kind {
             UpdateKind::UpdateClient => {
-                let header = SmHeader::try_from(client_message)?;
+                let header = Header::try_from(client_message)?;
                 self.verify_header(ctx, client_id, header)
             }
             UpdateKind::SubmitMisbehaviour => {
-                let misbehaviour = SmMisbehaviour::try_from(client_message)?;
+                let misbehaviour = Misbehaviour::try_from(client_message)?;
                 self.verify_misbehaviour(ctx, client_id, misbehaviour)
             }
         }
@@ -209,11 +212,11 @@ impl Ics2ClientState for ClientState {
     ) -> Result<bool, ClientError> {
         match update_kind {
             UpdateKind::UpdateClient => {
-                let header = SmHeader::try_from(client_message)?;
+                let header = Header::try_from(client_message)?;
                 self.check_for_misbehaviour_update_client(ctx, client_id, header)
             }
             UpdateKind::SubmitMisbehaviour => {
-                let misbehaviour = SmMisbehaviour::try_from(client_message)?;
+                let misbehaviour = Misbehaviour::try_from(client_message)?;
                 self.check_for_misbehaviour_misbehavior(&misbehaviour)
             }
         }
@@ -233,11 +236,11 @@ impl Ics2ClientState for ClientState {
         client_id: &ClientId,
         header: Any,
     ) -> Result<Vec<Height>, ClientError> {
-        let sm_header = SmHeader::try_from(header).map_err(|e| ClientError::Other {
+        let sm_header = Header::try_from(header).map_err(|e| ClientError::Other {
             description: format!("decode SmHeader Error({})", e),
         })?;
 
-        let consensus_state = SmConsensusState::new(
+        let consensus_state = ConsensusState::new(
             sm_header.new_public_key,
             sm_header.new_diversifier,
             sm_header.timestamp,
@@ -368,15 +371,15 @@ impl Ics2ClientState for ClientState {
     }
 }
 
-impl Protobuf<RawSmClientState> for ClientState {}
+impl Protobuf<RawClientState> for ClientState {}
 
-impl TryFrom<RawSmClientState> for ClientState {
+impl TryFrom<RawClientState> for ClientState {
     type Error = Error;
 
-    fn try_from(raw: RawSmClientState) -> Result<Self, Self::Error> {
+    fn try_from(raw: RawClientState) -> Result<Self, Self::Error> {
         let chain_id = ChainId::from_string(raw.chain_id.as_str());
         let sequence = Height::new(0, raw.sequence).map_err(Error::InvalidHeight)?;
-        let consensus_state: SmConsensusState = raw
+        let consensus_state: ConsensusState = raw
             .consensus_state
             .ok_or(Error::ConsensusStateIsEmpty)?
             .try_into()?;
@@ -390,7 +393,7 @@ impl TryFrom<RawSmClientState> for ClientState {
     }
 }
 
-impl From<ClientState> for RawSmClientState {
+impl From<ClientState> for RawClientState {
     fn from(value: ClientState) -> Self {
         Self {
             chain_id: value.chain_id.to_string(),
@@ -411,7 +414,7 @@ impl TryFrom<Any> for ClientState {
         use core::ops::Deref;
 
         fn decode_client_state<B: Buf>(buf: B) -> Result<ClientState, Error> {
-            RawSmClientState::decode(buf)
+            RawClientState::decode(buf)
                 .map_err(Error::Decode)?
                 .try_into()
         }
@@ -431,7 +434,7 @@ impl From<ClientState> for Any {
     fn from(client_state: ClientState) -> Self {
         Any {
             type_url: SOLOMACHINE_CLIENT_STATE_TYPE_URL.to_string(),
-            value: Protobuf::<RawSmClientState>::encode_vec(&client_state),
+            value: Protobuf::<RawClientState>::encode_vec(&client_state),
         }
     }
 }
