@@ -5,7 +5,7 @@ use bytes::Buf;
 use ibc::core::ics02_client::error::ClientError;
 use ibc::Height;
 use ibc_proto::google::protobuf::Any;
-use ibc_proto::ibc::lightclients::solomachine::v3::Misbehaviour as RawSmMisbehaviour;
+use ibc_proto::ibc::lightclients::solomachine::v3::Misbehaviour as RawMisbehaviour;
 use ibc_proto::protobuf::Protobuf;
 use prost::Message;
 
@@ -20,12 +20,12 @@ pub struct Misbehaviour {
     pub signature_two: SignatureAndData,
 }
 
-impl Protobuf<RawSmMisbehaviour> for Misbehaviour {}
+impl Protobuf<RawMisbehaviour> for Misbehaviour {}
 
-impl TryFrom<RawSmMisbehaviour> for Misbehaviour {
+impl TryFrom<RawMisbehaviour> for Misbehaviour {
     type Error = Error;
 
-    fn try_from(raw: RawSmMisbehaviour) -> Result<Self, Self::Error> {
+    fn try_from(raw: RawMisbehaviour) -> Result<Self, Self::Error> {
         let sequence = Height::new(0, raw.sequence).map_err(Error::InvalidHeight)?;
         let signature_one: SignatureAndData = raw
             .signature_one
@@ -44,7 +44,7 @@ impl TryFrom<RawSmMisbehaviour> for Misbehaviour {
     }
 }
 
-impl From<Misbehaviour> for RawSmMisbehaviour {
+impl From<Misbehaviour> for RawMisbehaviour {
     fn from(value: Misbehaviour) -> Self {
         let sequence = value.sequence.revision_height();
 
@@ -65,7 +65,7 @@ impl TryFrom<Any> for Misbehaviour {
         use core::ops::Deref;
 
         fn decode_misbehaviour<B: Buf>(buf: B) -> Result<Misbehaviour, Error> {
-            RawSmMisbehaviour::decode(buf)
+            RawMisbehaviour::decode(buf)
                 .map_err(Error::Decode)?
                 .try_into()
         }
@@ -85,13 +85,13 @@ impl From<Misbehaviour> for Any {
     fn from(misbehaviour: Misbehaviour) -> Self {
         Any {
             type_url: SOLOMACHINE_MISBEHAVIOUR_TYPE_URL.to_string(),
-            value: Protobuf::<RawSmMisbehaviour>::encode_vec(&misbehaviour),
+            value: Protobuf::<RawMisbehaviour>::encode_vec(&misbehaviour),
         }
     }
 }
 
 pub fn decode_misbehaviour<B: Buf>(buf: B) -> Result<Misbehaviour, Error> {
-    RawSmMisbehaviour::decode(buf)
+    RawMisbehaviour::decode(buf)
         .map_err(Error::Decode)?
         .try_into()
 }

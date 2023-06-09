@@ -6,7 +6,7 @@ use ibc::core::ics02_client::error::ClientError;
 use ibc::core::timestamp::Timestamp;
 use ibc::Height;
 use ibc_proto::google::protobuf::Any;
-use ibc_proto::ibc::lightclients::solomachine::v3::Header as RawSmHeader;
+use ibc_proto::ibc::lightclients::solomachine::v3::Header as RawHeader;
 use ibc_proto::protobuf::Protobuf;
 use prost::Message;
 
@@ -51,12 +51,12 @@ impl ibc::core::ics02_client::header::Header for Header {
     }
 }
 
-impl Protobuf<RawSmHeader> for Header {}
+impl Protobuf<RawHeader> for Header {}
 
-impl TryFrom<RawSmHeader> for Header {
+impl TryFrom<RawHeader> for Header {
     type Error = Error;
 
-    fn try_from(raw: RawSmHeader) -> Result<Self, Self::Error> {
+    fn try_from(raw: RawHeader) -> Result<Self, Self::Error> {
         let timestamp =
             Timestamp::from_nanoseconds(raw.timestamp).map_err(Error::ParseTimeError)?;
         let signature = raw.signature;
@@ -74,7 +74,7 @@ impl TryFrom<RawSmHeader> for Header {
     }
 }
 
-impl From<Header> for RawSmHeader {
+impl From<Header> for RawHeader {
     fn from(value: Header) -> Self {
         Self {
             timestamp: value.timestamp.nanoseconds(),
@@ -106,13 +106,13 @@ impl From<Header> for Any {
     fn from(header: Header) -> Self {
         Any {
             type_url: SOLOMACHINE_HEADER_TYPE_URL.to_string(),
-            value: Protobuf::<RawSmHeader>::encode_vec(&header),
+            value: Protobuf::<RawHeader>::encode_vec(&header),
         }
     }
 }
 
 pub fn decode_header<B: Buf>(buf: B) -> Result<Header, Error> {
-    RawSmHeader::decode(buf).map_err(Error::Decode)?.try_into()
+    RawHeader::decode(buf).map_err(Error::Decode)?.try_into()
 }
 
 #[test]
