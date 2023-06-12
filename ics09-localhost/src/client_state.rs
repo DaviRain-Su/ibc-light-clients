@@ -1,9 +1,10 @@
+use crate::consensus_state::ConsensusState;
 use crate::error::Error;
 use crate::prelude::*;
 use ibc::core::ics02_client::client_state::UpdateKind;
 use ibc::core::ics02_client::client_state::{ClientState as Ics2ClientState, UpdatedState};
 use ibc::core::ics02_client::client_type::ClientType;
-use ibc::core::ics02_client::consensus_state::ConsensusState;
+use ibc::core::ics02_client::consensus_state::ConsensusState as Ics02ConsensusState;
 use ibc::core::ics02_client::error::ClientError;
 use ibc::core::ics23_commitment::commitment::{
     CommitmentPrefix, CommitmentProofBytes, CommitmentRoot,
@@ -56,8 +57,11 @@ impl Ics2ClientState for ClientState {
         false
     }
 
-    fn initialise(&self, _consensus_state: Any) -> Result<Box<dyn ConsensusState>, ClientError> {
-        todo!()
+    fn initialise(
+        &self,
+        consensus_state: Any,
+    ) -> Result<Box<dyn Ics02ConsensusState>, ClientError> {
+        ConsensusState::try_from(consensus_state).map(ConsensusState::into_box)
     }
 
     /// verify_client_message must verify a client_message. A client_message
