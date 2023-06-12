@@ -138,12 +138,13 @@ impl Ics2ClientState for ClientState {
 
     /// Check if the given proof has a valid height for the client
     fn validate_proof_height(&self, proof_height: Height) -> Result<(), ClientError> {
-        if self.latest_height() < proof_height {
-            return Err(ClientError::InvalidProofHeight {
-                latest_height: self.latest_height(),
-                proof_height,
-            });
-        }
+        // todo(davirian)
+        // if self.latest_height() < proof_height {
+        //     return Err(ClientError::InvalidProofHeight {
+        //         latest_height: self.latest_height(),
+        //         proof_height,
+        //     });
+        // }
         Ok(())
     }
 
