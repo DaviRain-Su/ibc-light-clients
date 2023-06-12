@@ -15,6 +15,8 @@ pub const SOLOMACHINE_HEADER_TYPE_URL: &str = "/ibc.lightclients.solomachine.v3.
 /// Header defines a solo machine consensus header
 #[derive(serde::Serialize, serde::Deserialize, Clone, PartialEq)]
 pub struct Header {
+    /// latest sequence of the client state
+    pub sequence: Height,
     pub timestamp: Timestamp,
     pub signature: Vec<u8>,
     pub new_public_key: PublicKey,
@@ -43,7 +45,8 @@ impl Display for Header {
 impl ibc::core::ics02_client::header::Header for Header {
     fn height(&self) -> Height {
         // todo(davirian), this can improve
-        Height::new(0, 9999).expect("never failed")
+        // Height::new(0, 9999).expect("never failed")
+        self.sequence
     }
 
     fn timestamp(&self) -> Timestamp {
@@ -57,6 +60,7 @@ impl TryFrom<RawHeader> for Header {
     type Error = Error;
 
     fn try_from(raw: RawHeader) -> Result<Self, Self::Error> {
+        let sequence = Height::new(0, raw.sequence).map_err(Error::InvalidHeight)?;
         let timestamp =
             Timestamp::from_nanoseconds(raw.timestamp).map_err(Error::ParseTimeError)?;
         let signature = raw.signature;
@@ -66,6 +70,7 @@ impl TryFrom<RawHeader> for Header {
                 .map_err(Error::PublicKeyParseFailed)?;
         let new_diversifier = raw.new_diversifier;
         Ok(Self {
+            sequence,
             timestamp,
             signature,
             new_public_key,
@@ -77,6 +82,7 @@ impl TryFrom<RawHeader> for Header {
 impl From<Header> for RawHeader {
     fn from(value: Header) -> Self {
         Self {
+            sequence: value.sequence.revision_height(),
             timestamp: value.timestamp.nanoseconds(),
             signature: value.signature,
             new_public_key: Some(value.new_public_key.to_any()),
@@ -121,6 +127,7 @@ fn test_header_der_ser() {
 
     let fix_public_key = EXAMPLE_JSON.parse::<PublicKey>().unwrap();
     let temp_header = Header {
+        sequence: Height::new(0, 1).unwrap(),
         timestamp: Timestamp::now(),
         signature: vec![1, 2, 3],
         new_public_key: fix_public_key,
